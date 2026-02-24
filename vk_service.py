@@ -1,4 +1,5 @@
 import os
+from typing import Any, Callable, Generator
 
 import vk_api
 from dotenv import load_dotenv
@@ -14,33 +15,56 @@ ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
 GROUP_ID = int(os.getenv('GROUP_ID')) if os.getenv('GROUP_ID') else None
 
 
+def paginate_response(
+    method: Callable[..., dict[str, Any]],
+    **params: Any
+) -> Generator[dict[str, Any], None, None]:
+    """Универсальная пагинация для VK API."""
+    count = 100
+    offset = 0
+
+    while True:
+        response = method(count=count, offset=offset, **params)
+        items = response.get('items', [])
+
+        if not items:
+            break
+
+        yield from items
+
+        offset += count
+
+
+def get_title_and_id_from_topics(
+    vk: vk_api.vk_api.VkApiMethod,
+    group_id: int
+) -> dict[int, str]:
+    """
+    Получает все обсуждения группы и возвращает словарь: {topic_id: title}
+    """
+    logger.info(f'Запрос топиков группы {group_id}')
+
+    return {
+        item['id']: item['title']
+        for item in paginate_response(vk.board.getTopics, group_id=group_id)
+    }
+
+
 def get_all_comments(
     vk: vk_api.vk_api.VkApiMethod,
     group_id: int,
     topic_id: int
 ) -> list[Comments]:
     """Отдает все комментарии топика."""
-    logger.info('Запрос комментов')
-    offset = 0
-    count = 100
-    comments = []
-
-    while True:
-        response = vk.board.getComments(
+    logger.info(f'Запрос комментов топика {topic_id}')
+    return [
+        Comments(**item)
+        for item in paginate_response(
+            vk.board.getComments,
             group_id=group_id,
-            topic_id=topic_id,
-            count=count,
-            offset=offset
+            topic_id=topic_id
         )
-        items = response['items']
-
-        if not items:
-            break
-
-        comments.extend(Comments(**item) for item in items)
-        offset += count
-
-    return comments
+    ]
 
 
 def get_topics_with_comments(
@@ -49,7 +73,6 @@ def get_topics_with_comments(
 ) -> list[Topic]:
     """Собирает и отдает список топиков с коментариями."""
     logger.info('Сбор топиков и комментариев в один список')
-
     if not token or not group_id:
         raise ValueError(
             'Задайте переменные окружения ACCESS_TOKEN и GROUP_ID.'
@@ -58,15 +81,12 @@ def get_topics_with_comments(
         vk_session = vk_api.VkApi(token=token)
         vk = vk_session.get_api()
 
-        titles = {
-            item['id']: item['title']
-            for item in vk.board.getTopics(group_id=group_id)['items']
-        }
-
         topics = []
+        titles = get_title_and_id_from_topics(vk, group_id)
 
         for title_id, title in titles.items():
             logger.info(f'Запрос коментов топика {title}')
+
             comments = get_all_comments(vk, group_id, title_id)
             topics.append(
                 Topic(
@@ -74,8 +94,7 @@ def get_topics_with_comments(
                     comments=comments
                 )
             )
-
         return topics
 
-    except vk_api.VkApiError as error:
-        raise vk_api.VkApiError(f'Ошибка Апи: {error}')
+    except vk_api.VkApiError:
+        raise
