@@ -13,9 +13,8 @@
 ## Требования
 
 * Python 3.11+
-* vk-api
-* python-dotenv
-* pydantic v2
+* aiohttp 3.14
+* python-decouple 3.8
 * docxtpl
 
 Установка зависимостей:
@@ -42,17 +41,17 @@ pip install -r requirements.txt
 Создайте файл `.env` в корне проекта:
 
 ```env
-ACCESS_TOKEN=ваш_vk_токен
+TOKEN=ваш_vk_токен
 GROUP_ID=123456789
 ```
 
-* **ACCESS_TOKEN** — токен доступа с правами на чтение обсуждений.
+* **TOKEN** — токен доступа с правами на чтение обсуждений.
 * **GROUP_ID** — ID сообщества (без минуса).
 
 ## Запуск
 
 ```bash
-python main.py
+python app/main.py
 ```
 
 После выполнения будет создан файл:
@@ -63,13 +62,16 @@ output/Topics.docx
 
 ## Структура проекта
 
-* `main.py` — точка входа.
-* `vk_service.py` — работа с VK API.
-* `doc_formater.py` — генерация DOCX по шаблону.
-* `models.py` — Pydantic-модели.
-* `logger_setup.py` — настройка логирования.
-* `template/template.docx` — шаблон документа.
-* `output/` — сгенерированные файлы.
+* `main.py` - точка входа.
+* `vk_service.py` - работа с VK API.
+* `settings.py` - настройки проекта.
+* `utils.py` - утилиты.
+* `exceptions.py` - кастомные исключения.
+* `doc_formater.py` - генерация DOCX по шаблону.
+* `typed_dicts.py` - типы для объектов возвращаемых VK API.
+* `logger_setup.py` - настройка логирования.
+* `template/template.docx` - шаблон документа.
+* `output/` - сгенерированные файлы.
 
 ## Шаблон DOCX
 
@@ -103,8 +105,8 @@ output/Topics.docx
 
 ## Возможные ошибки
 * ошибка API VK
+* неожиданный статус ответа от VK API
 * отсутствуют переменные окружения `.env`;
-* неверный токен или `GROUP_ID`;
 * отсутствует `template/template.docx`.
 
 ## Лицензия
