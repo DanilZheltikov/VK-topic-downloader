@@ -8,7 +8,7 @@ class TopicWithIDDict(TypedDict):
 
 
 class Comment(TypedDict):
-    date: str
+    date: int
     text: str
 
 
