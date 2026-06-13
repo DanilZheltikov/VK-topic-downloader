@@ -26,3 +26,13 @@ DEFAULT_PARAMS = {
     'count': 1,
     'offset': DEFAULT_OFFSET
 }
+
+EMPTY_COMMENTS = [
+    {'text': 'Комментариев нет', 'date': '0'}
+]
+EMPTY_TOPICS = [
+    {
+        'title': 'Обсуждения отсутствуют',
+        'comments': EMPTY_COMMENTS
+    }
+]

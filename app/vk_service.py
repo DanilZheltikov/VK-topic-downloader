@@ -10,6 +10,8 @@ from settings import (
     COMMENT_METHOD,
     DEFAULT_OFFSET,
     DEFAULT_PARAMS,
+    EMPTY_COMMENTS,
+    EMPTY_TOPICS,
     HEADERS,
     ITEMS_COUNT,
     SEMAPHORE,
@@ -101,9 +103,14 @@ async def get_topic_with_comments(
     topic: TopicWithIDDict
 ) -> Topic:
     """Формирует структуру обсуждения со всеми его комментариями."""
+    comments = await get_all_comments(session, topic)
+    if not comments:
+        logger.debug('Комментариев нет.')
+        comments = EMPTY_COMMENTS
+
     return {
         'title': topic['title'],
-        'comments': await get_all_comments(session, topic)
+        'comments': comments
     }
 
 
@@ -117,6 +124,10 @@ async def get_all_topics_with_comments(
         params=DEFAULT_PARAMS
     )
     total_topics_count = first_response.get('count', 0)
+    if not total_topics_count:
+        logger.debug('Обсуждений нет.')
+        return EMPTY_TOPICS
+
     topics: list[TopicWithIDDict] = await paginate_response(
         session=session,
         total_items_count=total_topics_count,
