@@ -15,7 +15,7 @@ VERSION = "5.199"
 TOPIC_METHOD = 'method/board.getTopics'
 COMMENT_METHOD = 'method/board.getComments'
 
-REQUEST_PER_SECOND_COUNT = 6
+REQUEST_PER_SECOND_COUNT = 3
 SEMAPHORE = asyncio.Semaphore(REQUEST_PER_SECOND_COUNT)
 
 ITEMS_COUNT = 100

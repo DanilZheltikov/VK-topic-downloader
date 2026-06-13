@@ -21,6 +21,8 @@ async def main():
         }
         doc_render(context=context)
 
+        logger.info('Документ готов.')
+
     except Exception as error:
         logger.error(f'Ошибка: {error}')
         exit()

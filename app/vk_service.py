@@ -4,6 +4,7 @@ from typing import Any
 
 import aiohttp
 
+from exceptions import InvalidAPIResponseError, VKApiError
 from logger_setup import setup_logger
 from settings import (
     COMMENT_METHOD,
@@ -25,19 +26,27 @@ async def make_vk_api_request(
     url: str,
     params: dict
 ) -> dict[str, Any]:
+    
     async with SEMAPHORE:
         async with session.get(
             url,
             params=params,
             headers=HEADERS
         ) as response:
+            loger.debug(f'Запрос {url}, c параметрами {params}')
+
             if response.status != HTTPStatus.OK:
-                return {}
+                raise InvalidAPIResponseError(
+                    f'Не ожиданный статус-код: {response.status}'
+                )
+
             vk_api_response: dict = await response.json()
 
             if 'error' in vk_api_response:
-                print(vk_api_response['error']['error_message'])
-                return {}
+                raise VKApiError(
+                    f'{vk_api_response['error']['error_msg']}\n'
+                    f'Код ошибки: {vk_api_response['error']['error_code']}'
+                )
 
             return vk_api_response.get('response', {})
 
@@ -76,6 +85,7 @@ async def get_all_comments(
     session: aiohttp.ClientSession,
     topic: TopicWithIDDict
 ) -> list[Comment]:
+    loger.info(f"Запрос комментариев обсуждения: {topic['title']}")
     return await paginate_response(
         session=session,
         total_items_count=topic['comments'],
