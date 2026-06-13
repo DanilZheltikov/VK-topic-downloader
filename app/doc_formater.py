@@ -1,15 +1,11 @@
-from pathlib import Path
 from typing import Any, Mapping
 
 from docxtpl import DocxTemplate
 
 from logger_setup import setup_logger
+from settings import OUTPUT_DIR, TEMPLATE_PATH
 
 logger = setup_logger(name=__name__)
-
-BASE_DIR = Path(__file__).parent
-TEMPLATE_PATH = BASE_DIR / 'template' / 'template.docx'
-OUTPUT_DIR = BASE_DIR / 'output'
 
 
 def doc_render(

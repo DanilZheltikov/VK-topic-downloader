@@ -1,19 +1,23 @@
+import asyncio
 from sys import exit
 
+import aiohttp
 from doc_formater import doc_render
 from logger_setup import setup_logger
-from vk_service import get_topics_with_comments
+from vk_service import get_all_topics_with_comments
 
 logger = setup_logger(name=__name__)
 
 
-def main():
+async def main():
     """Управляющая функция."""
     logger.info('Запуск основной функции.')
     try:
-        topics = get_topics_with_comments()
+        async with aiohttp.ClientSession() as session:
+            topics = await get_all_topics_with_comments(session)
+
         context = {
-            'topics': [topic.model_dump(exclude=None) for topic in topics]
+            'topics': topics
         }
         doc_render(context=context)
 
@@ -23,4 +27,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
